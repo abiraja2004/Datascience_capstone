@@ -1,0 +1,239 @@
+---
+title: "Milestone_report"
+author: "preethi"
+date: "2/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This is for the capstone Datascience course. 
+
+This is done to demonstrate that we have gotten used to working with the data and that you are on track to create your prediction algorithm
+
+1. Demonstrate that you've downloaded the data and have successfully loaded it in.  
+2. Create a basic report of summary statistics about the data sets.  
+3. Report any interesting findings that you amassed so far.  
+4. Get feedback on your plans for creating a prediction algorithm and Shiny app.
+
+
+## Downloading and Extracting the Data
+
+We need to download and extract the 3 files that are under the URL : 
+["https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip)
+We will be using files under the directory EN_US
+There are three files under this directory  
+
+1) en_US.blogs.txt - text from blog posts  
+2) en_US.news.txt - text from news articles posted online  
+3) en_US.twitter.txt - tweets on Twitter   
+
+```{r Download}
+
+fileUrl <-"https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"
+if (!file.exists("Coursera-SwiftKey.zip")){
+  download.file(fileUrl, destfile = "Coursera-SwiftKey.zip", method="curl")
+}
+unzip("Coursera-SwiftKey.zip")
+```
+And then we load the three text files that we want. 
+
+```{r readline}
+setwd("~/R/datascience_coursera_main/Capstone/Datascience_capstone")
+file1 <- file("final/en_US/en_US.blogs.txt", "rb")
+blogs <- readLines(file1, encoding = "UTF-8",skipNul = TRUE)
+close(file1)
+
+file2 <- file("final/en_US/en_US.news.txt", "rb")
+news <- readLines(file2, encoding = "UTF-8",skipNul = TRUE)
+close(file2)
+
+file3 <- file("final/en_US/en_US.twitter.txt", "rb")
+twitter <- readLines(file3, encoding = "UTF-8",skipNul = TRUE)
+close(file3)
+```
+
+Then we count the length of the lines and words in each of these files  
+
+```{r words}
+ls1 <- length(blogs)
+ls2 <- length(news)
+ls3 <- length(twitter)
+linecount <- rbind(ls1, ls2, ls3)
+
+library(stringi)
+wordsz1 <- sum(stri_count_words(blogs))
+wordsz2 <- sum(stri_count_words(news))
+wordsz3 <- sum(stri_count_words(twitter))
+wordcount <- rbind(wordsz1, wordsz2, wordsz3)
+```
+
+
+```{r sampling}
+set.seed(123)
+
+sampleTexts <- function(data, percentage)
+{
+    sample.size <- ceiling(length(data) * percentage)[1]
+    sampled_entries <- sample(data, sample.size, replace = FALSE)
+    return(sampled_entries)
+}
+
+sample_blog <- sampleTexts(blogs, 0.1)
+sample_news <- sampleTexts(news, 0.1)
+sample_twit <- sampleTexts(twitter, 0.02)
+
+
+data1 <- paste(sample_blog,sample_news,sample_twit)
+```
+
+First let us create a corpus by combining the three files
+
+```{r corp}
+library(tm)
+
+corpus <- VCorpus(VectorSource(data1))
+
+```
+
+
+```{r profanity}
+
+profanity <- scan('list.txt', what='character', sep='\n')
+corpus <- tm_map(corpus, content_transformer(function(x) iconv(x, from='UTF-8', to='ASCII', sub='')))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, words=profanity)
+corpus <- tm_map(corpus, stripWhitespace)
+
+corpus_ex <- tm_map(corpus, removeWords, stopwords(kind = "eng"))
+```
+create a document term matrix: this is a document with the three documents in the rows and the unique terms in the colums
+
+```{r DTM}
+
+DTM_corpus <- DocumentTermMatrix(corpus)
+DTM_corpus_ex <- DocumentTermMatrix(corpus_ex)
+```
+The above step is neccesary to create a function the gives you the frequencies of the different words in the form of a data frame
+
+```{r freqcount}
+library(dplyr)
+
+freq_count <- function (DTM_corpus) {
+  sum <- colSums(as.matrix(DTM_corpus))
+    f_counts <- data.frame(term=names(sum), count=unname(sum)) %>%
+    arrange(desc(count))
+  return(f_counts)
+}
+
+most_freq_count <- freq_count(DTM_corpus)
+most_freq_count_non_stop <- freq_count(DTM_corpus_ex)
+```
+
+```{r wordcloud}
+
+library(wordcloud) 
+word_cloud1 <- function(frame, max_word = 60, ncolors=6, colors = "Paired")
+  wordcloud(frame$term, frame$count,max.words=max_word,colors = brewer.pal(ncolors, colors))
+
+library(wordcloud2)
+word_cloud <- function(frame, colors="Spectral"){
+   wordcloud2(frame)
+}
+
+word_cloud(most_freq_count)
+
+word_cloud1(most_freq_count_non_stop)
+```
+
+```{r histogram}
+library(ggplot2)
+library(gridExtra)
+plotMostFreq <- function(data, n_terms=30, fill_color='steelblue', title) {
+  ggplot(data[1:n_terms,], aes(x=reorder(term, count), y=count)) + 
+    geom_bar(stat='identity', fill=fill_color) +
+    xlab('Term') + 
+    ylab('Count') +
+    ggtitle(title) +
+    coord_flip()
+}
+
+plot30 <- plotMostFreq(most_freq_count, title="30 Most Common Words")
+plot30_ex_stop <- plotMostFreq(most_freq_count_non_stop, title="30 Most Common Words w/o Stopwords")
+
+grid.arrange(plot30, plot30_ex_stop, ncol=2)
+
+```
+
+uni, bi and tri grams are created and the first ten called out
+
+```{r grams}
+
+UnigramToken <- function(x) NGramTokenizer(x, Weka_control(min=1, max=1))
+d_uni <- DocumentTermMatrix(doc_sample, control=list(tokenize=UnigramToken))
+d_uni_freq <- d_uni %>%
+  removeSparseTerms(0.2) %>%
+  as.matrix %>%
+  colSums %>%
+  sort(decreasing=TRUE)  
+dtm_uni_freq_d <- data.frame(word = names(d_uni_freq), freq = d_uni_freq)
+head(dtm_uni_freq_d, 10)
+
+
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+dtm_bi <- DocumentTermMatrix(doc_sample, control=list(tokenize=BigramTokenizer))
+dtm_bi_freq <-dtm_bi %>%
+  removeSparseTerms(0.2) %>%
+  as.matrix %>%
+  colSums %>%
+  sort(decreasing=TRUE)  
+dtm_bi_freq_d <- data.frame(word = names(dtm_bi_freq), freq = dtm_bi_freq)
+head(dtm_bi_freq_d, 10)
+
+TrigramToken <- function(x) NGramTokenizer(x, Weka_control(min=3, max=3))
+dtm_tri <- DocumentTermMatrix(doc_sample, control=list(tokenize=TrigramToken))
+dtm_tri_freq <-dtm_tri %>%
+  removeSparseTerms(0.2) %>%
+  as.matrix %>%
+  colSums %>%
+  sort(decreasing=TRUE)  
+dtm_tri_freq_d <- data.frame(word = names(dtm_tri_freq), freq = dtm_tri_freq)
+head(dtm_tri_freq_d, 10)
+```
+plot the above grams
+
+```{r plot}
+library(ggplot2)
+library(gridExtra)
+fr10 <- head(dtm_uni_freq_d, 10)
+freqb10 <- head(dtm_bi_freq_d, 10)
+freqt10 <- head(dtm_tri_freq_d, 10)
+up <- ggplot(fr10, aes(x=reorder(word,freq), y=freq)) +
+  geom_bar(stat="identity") +
+  theme_bw() +
+  coord_flip() +
+  theme(axis.title.y = element_blank()) +
+  labs(y="Frequency", title="Top 10 frequent Unigram words")
+bp <-ggplot(freqb10, aes(x=reorder(word,freq), y=freq)) +
+  geom_bar(stat="identity") +
+  theme_bw() +
+  coord_flip() +
+  theme(axis.title.y = element_blank()) +
+  labs(y="Frequency", title="Top 10 frequent Bigram words")
+tp <- ggplot(freqt10, aes(x=reorder(word,freq), y=freq)) +
+  geom_bar(stat="identity") +
+  theme_bw() +
+  coord_flip() +
+  theme(axis.title.y = element_blank()) +
+  labs(y="Frequency", title="Top 10 frequent Trigram words")
+grid.arrange(up, bp, tp, ncol=1, nrow =3)
+
+```
+
+To improve the algorithm: We can start with training and test data set, increase the s
