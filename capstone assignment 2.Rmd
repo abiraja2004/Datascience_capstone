@@ -74,8 +74,7 @@ wordcount <- rbind(wordsz1, wordsz2, wordsz3)
 
 
 ```{r sampling}
-set.seed(123)
-
+set.seed(1)
 sampleTexts <- function(data, percentage)
 {
     sample.size <- ceiling(length(data) * percentage)[1]
@@ -85,7 +84,7 @@ sampleTexts <- function(data, percentage)
 
 sample_blog <- sampleTexts(blogs, 0.1)
 sample_news <- sampleTexts(news, 0.1)
-sample_twit <- sampleTexts(twitter, 0.02)
+sample_twit <- sampleTexts(twitter, 0.1)
 
 
 data1 <- paste(sample_blog,sample_news,sample_twit)
