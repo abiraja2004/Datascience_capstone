@@ -2,7 +2,7 @@ library(shiny)
 library(NLP)
 library(tm)
 library(RWeka)
-source("method.R")
+source("~/R/datascience_coursera_main/Capstone/Datascience_capstone/method.R")
 
 
 shinyServer(
