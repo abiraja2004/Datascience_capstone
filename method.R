@@ -1,7 +1,7 @@
-load("~/R/datascience_coursera_main/Capstone/Datascience_capstone/unigram.Rda")
-load("~/R/datascience_coursera_main/Capstone/Datascience_capstone/bigram.Rda")
-load("~/R/datascience_coursera_main/Capstone/Datascience_capstone/trigram.Rda")
-load("~/R/datascience_coursera_main/Capstone/Datascience_capstone/fourgram.Rda")
+load("unigram.Rda")
+load("bigram.Rda")
+load("trigram.Rda")
+load("fourgram.Rda")
 
 wordproc <- function(sentence){
   value = "next word is..."
@@ -18,11 +18,7 @@ wordproc <- function(sentence){
     value = bigram(sen[length(sen)])
     
   }
-  if(is.null(value)){
-    value = "the"
-    #        k<-unigramlist$unigram
-    #        value = as.String(k[1])
-  }
+ 
   
   return(value)
 }

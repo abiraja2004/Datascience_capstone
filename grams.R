@@ -46,23 +46,26 @@ twoGM <- TermDocumentMatrix(corpus, control = list(tokenize = biGramTokenizer))
 threeGM <- TermDocumentMatrix(corpus, control = list(tokenize = triGramTokenizer))
 fourGM <- TermDocumentMatrix(corpus, control = list(tokenize = fourGramTokenizer))
 
-freqTerms1 <- findFreqTerms(oneGM, lowfreq = 5)
+freqTerms1 <- findFreqTerms(oneGM, lowfreq = 4)
 termFreq1 <- rowSums(as.matrix(oneGM[freqTerms1,]))
 termFreq1 <- data.frame(unigram=names(termFreq1), frequency=termFreq1)
 termFreq1 <- termFreq1[order(-termFreq1$frequency),]
 unigramlist <- setDT(termFreq1)
 save(unigramlist,file="unigram.Rda",envir = .GlobalEnv)
+
 freqTerms2 <- findFreqTerms(twoGM, lowfreq = 3)
 termFreq2 <- rowSums(as.matrix(twoGM[freqTerms2,]))
 termFreq2 <- data.frame(bigram=names(termFreq2), frequency=termFreq2)
 termFreq2 <- termFreq2[order(-termFreq2$frequency),]
 bigramlist <- setDT(termFreq2)
 save(bigramlist,file="bigram.Rda",envir = .GlobalEnv)
+
 freqTerms3 <- findFreqTerms(threeGM, lowfreq = 2)
 termFreq3 <- rowSums(as.matrix(threeGM[freqTerms3,]))
 termFreq3 <- data.frame(trigram=names(termFreq3), frequency=termFreq3)
 trigramlist <- setDT(termFreq3)
 save(trigramlist,file="trigram.Rda",envir = .GlobalEnv)
+
 freqTerms4 <- findFreqTerms(fourGM, lowfreq = 1)
 termFreq4 <- rowSums(as.matrix(fourGM[freqTerms4,]))
 termFreq4 <- data.frame(fourgram=names(termFreq4), frequency=termFreq4)
