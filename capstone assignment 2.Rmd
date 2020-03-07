@@ -70,69 +70,51 @@ wordsz1 <- sum(stri_count_words(blogs))
 wordsz2 <- sum(stri_count_words(news))
 wordsz3 <- sum(stri_count_words(twitter))
 wordcount <- rbind(wordsz1, wordsz2, wordsz3)
+
+data.frame(source = c("blogs", "news", "twitter"),
+           num.lines = c(ls1,ls2,ls3),
+           num.words = c(wordsz1,wordsz2,wordsz3),
+           mean.num.words = c(mean(wordsz1), mean(wordsz2), mean(wordsz3)))
 ```
 
 
 ```{r sampling}
-set.seed(1)
-sampleTexts <- function(data, percentage)
-{
-    sample.size <- ceiling(length(data) * percentage)[1]
-    sampled_entries <- sample(data, sample.size, replace = FALSE)
-    return(sampled_entries)
-}
-
-sample_blog <- sampleTexts(blogs, 0.1)
-sample_news <- sampleTexts(news, 0.1)
-sample_twit <- sampleTexts(twitter, 0.1)
-
-
-data1 <- paste(sample_blog,sample_news,sample_twit)
+set.seed(5000)
+data.sample <- c(sample(blogs, ls1*0.02),
+                 sample(news, ls2*0.02),
+                 sample(twitter,ls3 * 0.02))
 ```
 
 First let us create a corpus by combining the three files
 
 ```{r corp}
 library(tm)
-
-corpus <- VCorpus(VectorSource(data1))
-
-```
-
-
-```{r profanity}
-
-profanity <- scan('list.txt', what='character', sep='\n')
-corpus <- tm_map(corpus, content_transformer(function(x) iconv(x, from='UTF-8', to='ASCII', sub='')))
+corpus <- VCorpus(VectorSource(data.sample))
+toSpace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
+corpus <- tm_map(corpus, toSpace, "(f|ht)tp(s?)://(.*)[.][a-z]+")
+corpus <- tm_map(corpus, toSpace, "@[^\\s]+")
+corpus <- tm_map(corpus, tolower)
 corpus <- tm_map(corpus, removePunctuation)
-corpus <- tm_map(corpus, content_transformer(tolower))
 corpus <- tm_map(corpus, removeNumbers)
-corpus <- tm_map(corpus, removeWords, words=profanity)
 corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, PlainTextDocument)
+unicorpus <- tm_map(corpus, removeWords, stopwords("en"))
 
-corpus_ex <- tm_map(corpus, removeWords, stopwords(kind = "eng"))
 ```
-create a document term matrix: this is a document with the three documents in the rows and the unique terms in the colums
 
-```{r DTM}
-
-DTM_corpus <- DocumentTermMatrix(corpus)
-DTM_corpus_ex <- DocumentTermMatrix(corpus_ex)
-```
 The above step is neccesary to create a function the gives you the frequencies of the different words in the form of a data frame
 
 ```{r freqcount}
 library(dplyr)
+library(plyr)
 
-freq_count <- function (DTM_corpus) {
-  sum <- colSums(as.matrix(DTM_corpus))
-    f_counts <- data.frame(term=names(sum), count=unname(sum)) %>%
-    arrange(desc(count))
-  return(f_counts)
+getFreq <- function(tdm) {
+  freq <- sort(rowSums(as.matrix(tdm)), decreasing = TRUE)
+  return(data.frame(word = names(freq), freq = freq))
 }
 
-most_freq_count <- freq_count(DTM_corpus)
-most_freq_count_non_stop <- freq_count(DTM_corpus_ex)
+freq1 <- getFreq(removeSparseTerms(TermDocumentMatrix(unicorpus), 0.9999))
+
 ```
 
 ```{r wordcloud}
@@ -146,7 +128,7 @@ word_cloud <- function(frame, colors="Spectral"){
    wordcloud2(frame)
 }
 
-word_cloud(most_freq_count)
+word_cloud()
 
 word_cloud1(most_freq_count_non_stop)
 ```
@@ -234,5 +216,4 @@ tp <- ggplot(freqt10, aes(x=reorder(word,freq), y=freq)) +
 grid.arrange(up, bp, tp, ncol=1, nrow =3)
 
 ```
-
-To improve the algorithm: We can start with training and test data set, increase the s
+This takes too long so we will an ngrams creater which only take a sample size of 500 char
