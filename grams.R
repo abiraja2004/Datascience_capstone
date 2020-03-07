@@ -1,13 +1,13 @@
 file1 <- file("final/en_US/en_US.blogs.txt", "rb")
-blog <- readLines(file1, encoding = "UTF-8", skipNul = TRUE, warn = TRUE)
+blog <- readLines(file1, skipNul = TRUE, warn = TRUE)
 close(file1)
 
 file2 <- file("final/en_US/en_US.news.txt", "rb")
-news <- readLines(file2, encoding = "UTF-8", skipNul = TRUE, warn = TRUE)
+news <- readLines(file2,  skipNul = TRUE, warn = TRUE)
 close(file2)
 
 file3 <- file("final/en_US/en_US.twitter.txt", "rb")
-twitter <- readLines(file3, encoding = "UTF-8", skipNul = TRUE, warn = TRUE)
+twitter <- readLines(file3, skipNul = TRUE, warn = TRUE)
 close(file3)
 
 library(ggplot2)
