@@ -6,6 +6,7 @@ load("fourgram.Rda")
 wordproc <- function(sentence){
   value = "next word is..."
   sen = unlist(strsplit(sentence,' '))
+  
   if(length(sen)>=3){
     value = fourgram(sen[(length(sen)-2):length(sen)])
   }
@@ -19,7 +20,6 @@ wordproc <- function(sentence){
     
   }
  
-  
   return(value)
 }
 
