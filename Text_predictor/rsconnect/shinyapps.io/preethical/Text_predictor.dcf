@@ -1,0 +1,12 @@
+name: Text_predictor
+title: Text_predictor
+username:
+account: preethical
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2341567
+bundleId: 3178397
+url: https://preethical.shinyapps.io/Text_predictor/
+when: 1590150994.44046
+asMultiple: FALSE
+asStatic: FALSE

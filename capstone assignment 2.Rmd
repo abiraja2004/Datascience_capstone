@@ -80,9 +80,13 @@ data.frame(source = c("blogs", "news", "twitter"),
 
 ```{r sampling}
 set.seed(5000)
-data.sample <- c(sample(blogs, ls1*0.02),
-                 sample(news, ls2*0.02),
-                 sample(twitter,ls3 * 0.02))
+
+sample_size = 1000
+
+sample_blog <- blogs[sample(1:length(blogs),sample_size)]
+sample_news <- news[sample(1:length(news),sample_size)]
+sample_twitter <- twitter[sample(1:length(twitter),sample_size)]
+data.sample <- c(sample_blog,sample_news,sample_twitter)
 ```
 
 First let us create a corpus by combining the three files
@@ -114,106 +118,99 @@ getFreq <- function(tdm) {
 }
 
 freq1 <- getFreq(removeSparseTerms(TermDocumentMatrix(unicorpus), 0.9999))
-
+freq2 <- getFreq(removeSparseTerms(TermDocumentMatrix(corpus), 0.9999))
 ```
 
 ```{r wordcloud}
 
 library(wordcloud) 
-word_cloud1 <- function(frame, max_word = 60, ncolors=6, colors = "Paired")
-  wordcloud(frame$term, frame$count,max.words=max_word,colors = brewer.pal(ncolors, colors))
-
+pal2 <- brewer.pal(10,"Spectral")
+word_cloud1 <- wordcloud(freq1$word, freq1$freq, max.words = 60, colors=pal2)
+word_cloud1
+  
 library(wordcloud2)
-word_cloud <- function(frame, colors="Spectral"){
-   wordcloud2(frame)
-}
+word_cloud <- wordcloud2(freq2, color = "random-light",)
+word_cloud
 
-word_cloud()
-
-word_cloud1(most_freq_count_non_stop)
 ```
 
 ```{r histogram}
 library(ggplot2)
 library(gridExtra)
-plotMostFreq <- function(data, n_terms=30, fill_color='steelblue', title) {
-  ggplot(data[1:n_terms,], aes(x=reorder(term, count), y=count)) + 
-    geom_bar(stat='identity', fill=fill_color) +
+#plotMostFreq <- function(data, n_terms=30, fill_color='steelblue', title) {
+plot_1  <- ggplot(freq1[1:29,], aes(x=word,y=freq)) + 
+    geom_bar(stat='identity', fill="steelblue") +
     xlab('Term') + 
     ylab('Count') +
-    ggtitle(title) +
+    ggtitle("30 most common words with stopwords") +
     coord_flip()
-}
+plot_2 <- ggplot(freq2[1:29,], aes(x=word,y=freq)) + 
+    geom_bar(stat='identity', fill="steelblue") +
+    xlab('Term') + 
+    ylab('Count') +
+    ggtitle("30 most common words without stopwords") +
+    coord_flip()
 
-plot30 <- plotMostFreq(most_freq_count, title="30 Most Common Words")
-plot30_ex_stop <- plotMostFreq(most_freq_count_non_stop, title="30 Most Common Words w/o Stopwords")
 
-grid.arrange(plot30, plot30_ex_stop, ncol=2)
+grid.arrange(plot_1, plot_2, ncol=2)
 
 ```
 
 uni, bi and tri grams are created and the first ten called out
 
 ```{r grams}
-
-UnigramToken <- function(x) NGramTokenizer(x, Weka_control(min=1, max=1))
-d_uni <- DocumentTermMatrix(doc_sample, control=list(tokenize=UnigramToken))
-d_uni_freq <- d_uni %>%
-  removeSparseTerms(0.2) %>%
-  as.matrix %>%
-  colSums %>%
-  sort(decreasing=TRUE)  
-dtm_uni_freq_d <- data.frame(word = names(d_uni_freq), freq = d_uni_freq)
-head(dtm_uni_freq_d, 10)
-
-
-BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
-dtm_bi <- DocumentTermMatrix(doc_sample, control=list(tokenize=BigramTokenizer))
-dtm_bi_freq <-dtm_bi %>%
-  removeSparseTerms(0.2) %>%
-  as.matrix %>%
-  colSums %>%
-  sort(decreasing=TRUE)  
-dtm_bi_freq_d <- data.frame(word = names(dtm_bi_freq), freq = dtm_bi_freq)
-head(dtm_bi_freq_d, 10)
-
-TrigramToken <- function(x) NGramTokenizer(x, Weka_control(min=3, max=3))
-dtm_tri <- DocumentTermMatrix(doc_sample, control=list(tokenize=TrigramToken))
-dtm_tri_freq <-dtm_tri %>%
-  removeSparseTerms(0.2) %>%
-  as.matrix %>%
-  colSums %>%
-  sort(decreasing=TRUE)  
-dtm_tri_freq_d <- data.frame(word = names(dtm_tri_freq), freq = dtm_tri_freq)
-head(dtm_tri_freq_d, 10)
-```
-plot the above grams
-
-```{r plot}
+library(data.table)
+library(RWeka)
+library(tm)
 library(ggplot2)
 library(gridExtra)
-fr10 <- head(dtm_uni_freq_d, 10)
-freqb10 <- head(dtm_bi_freq_d, 10)
-freqt10 <- head(dtm_tri_freq_d, 10)
-up <- ggplot(fr10, aes(x=reorder(word,freq), y=freq)) +
-  geom_bar(stat="identity") +
-  theme_bw() +
-  coord_flip() +
-  theme(axis.title.y = element_blank()) +
-  labs(y="Frequency", title="Top 10 frequent Unigram words")
-bp <-ggplot(freqb10, aes(x=reorder(word,freq), y=freq)) +
-  geom_bar(stat="identity") +
-  theme_bw() +
-  coord_flip() +
-  theme(axis.title.y = element_blank()) +
-  labs(y="Frequency", title="Top 10 frequent Bigram words")
-tp <- ggplot(freqt10, aes(x=reorder(word,freq), y=freq)) +
-  geom_bar(stat="identity") +
-  theme_bw() +
-  coord_flip() +
-  theme(axis.title.y = element_blank()) +
-  labs(y="Frequency", title="Top 10 frequent Trigram words")
-grid.arrange(up, bp, tp, ncol=1, nrow =3)
 
+biGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+bi_gram<- TermDocumentMatrix(corpus, control = list(tokenize = biGramTokenizer))
+freqTerms2 <- findFreqTerms(bi_gram, lowfreq = 3)
+termFreq2 <- rowSums(as.matrix(bi_gram[freqTerms2,]))
+termFreq2 <- data.frame(bigram=names(termFreq2), frequency=termFreq2)
+termFreq2 <- termFreq2[order(-termFreq2$frequency),]
+bigramlist <- setDT(termFreq2)
+save(bigramlist,file="bigram.Rds",envir = .GlobalEnv)
+
+plot3 <- ggplot(bigramlist[1:10,], aes(x=bigram,y=frequency)) + 
+    geom_bar(stat='identity', fill="steelblue") +
+    xlab('Term') + 
+    ylab('Count') +
+    ggtitle("10 most common bigrams") +
+    coord_flip()
+
+triGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+tri_gram <- TermDocumentMatrix(unicorpus, control = list(tokenize = triGramTokenizer))
+freqTerms3 <- findFreqTerms(tri_gram, lowfreq = 2)
+termFreq3 <- rowSums(as.matrix(tri_gram[freqTerms3,]))
+termFreq3 <- data.frame(trigram=names(termFreq3), frequency=termFreq3)
+trigramlist <- setDT(termFreq3)
+save(trigramlist,file="trigram.Rds",envir = .GlobalEnv)
+
+plot4 <- ggplot(trigramlist[1:10,], aes(x=trigram,y=frequency)) + 
+    geom_bar(stat='identity', fill="steelblue") +
+    xlab('Term') + 
+    ylab('Count') +
+    ggtitle("10 most common trigrams") +
+    coord_flip()
+
+fourGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 4, max = 4))
+four_gram <- TermDocumentMatrix(unicorpus, control = list(tokenize = fourGramTokenizer))
+freqTerms4 <- findFreqTerms(four_gram, lowfreq = 1)
+termFreq4 <- rowSums(as.matrix(four_gram[freqTerms4,]))
+termFreq4 <- data.frame(fourgram=names(termFreq4), frequency=termFreq4)
+fourgramlist <- setDT(termFreq4)
+save(fourgramlist,file="fourgram.Rds",envir = .GlobalEnv)
+plot5 <- ggplot(fourgramlist[1:10,], aes(x=fourgram,y=frequency)) + 
+    geom_bar(stat='identity', fill="steelblue") +
+    xlab('Term') + 
+    ylab('Count') +
+    ggtitle("10 most quadruplegrans") +
+    coord_flip()
+
+grid.arrange(plot3, plot4, plot5, nrow=1)
 ```
+
 This takes too long so we will an ngrams creater which only take a sample size of 500 char

@@ -1,0 +1,33 @@
+---
+title: "Word_Prediction"
+author: "preethi"
+date: "3/7/2020"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+This little text predictor was created for the last project of the Data Science capstone whichis a seven week course that is a part of the Data Science specialization. The aim of the project is to create a text prediction algorithm -- based on the datasets supplied to us (from twitter, blogs and news articles)-- which will take an incomplete sentence and give you the next word in that sentence. 
+
+## Exploratory analysis
+
+During the first few weeks, we had to get the data, clean it and perform some simple exploratory analysis on the data
+It also includes the n-grams model that was tested and accepted for creation of the app and contains a word cloud and bar garph of uni,bi,tri grams. After which in order to make it fastere, the sample size for the model was reduced
+
+## Algorithm used - n-gram model
+
+- In the fields of computational linguistics and probability, an n-gram is a contiguous sequence of n items from a given sample of text or speech. The items can be phonemes, syllables, letters, words or base pairs according to the application. The n-grams typically are collected from a text or speech corpus. When the items are words, n-grams may also be called shingles. 
+
+## App
+- The app is hosted on Shiny app hosted on shiny apps.io, where it takes an input of and predicts the next word: https://preethical.shinyapps.io/Datascience_capstone_Predict_next/
+The app requies for it the server.r and ui.R files as well as the method.R file which in term uses the output from the grams.R file (uni,bi,tri and fourgram.RDa)
+
+
+## Thank you
+
+
+

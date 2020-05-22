@@ -1,4 +1,3 @@
-load("unigram.Rda")
 load("bigram.Rda")
 load("trigram.Rda")
 load("fourgram.Rda")
@@ -78,7 +77,7 @@ bigram <- function(twog){
   
   for(string0 in unigramlist$unigram){
     text = paste(two,string0)
-    found <- bigramlist[bigram==text]
+    found <- bigramlist[bigram == text]
     n<- as.numeric(found$frequency)
     
     if(length(n)!=0){

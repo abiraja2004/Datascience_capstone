@@ -11,6 +11,5 @@ shinyServer(
         output$prediction <- renderPrint({wordproc(input$Tcir)})
         
         
-        
     }
 )
