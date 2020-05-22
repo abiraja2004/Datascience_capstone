@@ -1,8 +1,10 @@
 ---
-title: "Word_Prediction"
+title: "Word Prediction"
 author: "preethi"
-date: "3/7/2020"
-output: slidy_presentation
+date: "22/5/2020"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,19 +17,25 @@ This little text predictor was created for the last project of the Data Science 
 
 ## Exploratory analysis
 
-During the first few weeks, we had to get the data, clean it and perform some simple exploratory analysis on the data
-It also includes the n-grams model that was tested and accepted for creation of the app and contains a word cloud and bar garph of uni,bi,tri grams. After which in order to make it fastere, the sample size for the model was reduced
+During the first few weeks, we had to get the data, clean it and perform some simple exploratory analysis on the data. I have compiled that in this html document with r markdown [here](https://rpubs.com/PreethiG/570939)  
 
-## Algorithm used - n-gram model
+It also includes the creation and cleaning of the corpus and then the creation of bi, tri and quad-grams with little word clouds to illustrate the different frequencie of the words or sets of words being used.   
+Definition of ngrams: In the fields of computational linguistics and probability, an n-gram is a contiguous sequence of n items from a given sample of text or speech. The items can be phonemes, syllables, letters, words or base pairs according to the application. The n-grams typically are collected from a text or speech corpus. When the items are words, n-grams may also be called shingles.  
 
-- In the fields of computational linguistics and probability, an n-gram is a contiguous sequence of n items from a given sample of text or speech. The items can be phonemes, syllables, letters, words or base pairs according to the application. The n-grams typically are collected from a text or speech corpus. When the items are words, n-grams may also be called shingles. 
+## Algorithm used - Stupid-backoff model
 
-## App
-- The app is hosted on Shiny app hosted on shiny apps.io, where it takes an input of and predicts the next word: https://preethical.shinyapps.io/Datascience_capstone_Predict_next/
-The app requies for it the server.r and ui.R files as well as the method.R file which in term uses the output from the grams.R file (uni,bi,tri and fourgram.RDa)
+- I used a stupid-backoff algorithms on the bi, tri, and quad grams to predict the next word. 
+It was first published by [Brants, 2007](https://www.aclweb.org/anthology/D07-1090.pdf).   
 
+The original back-off model - Katz back-off model calculates the conditional probability for each word that might complete the n-gram. It takes the maximum likelihood estimator, as the ratio of the number of occurences of that particular n-gram in the training set to the number of occurences of the n-1 word for this n-gram. If this ratio is 0, the model backs off and looks at the next smaller number. I have done this for only 4-grams. Since my laptop fritzes everytime, i make the sample size of my training set too big, it is quite small..which also reduces the accuracy of the model. I plan to see if i can use an R-Docker to help run this program with a larger sample size.
+
+## The Application
+- The app is hosted on Shiny app hosted on shiny apps.io, where it takes an input of and predicts the next word:[Text Predictor](https://preethical.shinyapps.io/Text_predictor/)
+The app requies for it the server.r and ui.R files as well as the method.R file which in term uses the output from the grams.R file (uni,bi,tri and fourgram.RDa). All the files are located in my [github repository](https://github.com/preethical/Datascience_capstone)
 
 ## Thank you
+
+- I hope you have had fun going through these documents and if you have suggestions please feel free to get in touch with me by [email](preethi@deobald.ca)
 
 
 
